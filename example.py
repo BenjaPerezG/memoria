@@ -1,4 +1,4 @@
-import base64, requests, sys, os
+import base64, requests, sys, os, json
 
 print("---------------------------------------------------")
 print("- Genesys Cloud Python Client Credentials Example -")
@@ -39,9 +39,39 @@ response_json = response.json()
 requestHeaders = {
     "Authorization": f"{ response_json['token_type'] } { response_json['access_token']}"
 }
+headers = {'Content-Type': 'application/json',
+           'Accept': 'application/json',
+           'Authorization': f"{response_json['token_type']} {response_json['access_token']}"}
 
 # Get roles
-response = requests.get(f"https://api.{ENVIRONMENT}/api/v2/authorization/roles", headers=requestHeaders)
+api_url = '/api/v2/authorization/roles'
+api_url1 = '/api/v2/analytics/flows/observations/query'
+
+request = {
+    'filter': {
+        'type': 'any',
+        'clauses': [
+            {
+                'type': '',
+                'dimensions': '',
+                'operator': '',
+                'value': '',
+                'range': {
+                    'gte': 0,
+                }
+            }
+        ],
+        'predicates': [
+            ''
+        ]
+    },
+    'metrics': [
+        "yes"
+    ],
+}
+
+# response = requests.get(f"https://api.{ENVIRONMENT}{api_url}", headers=requestHeaders)
+response = requests.post(f"https://api.{ENVIRONMENT}{api_url1}", data=json.dumps(request), headers=headers)
 
 # Check response
 if response.status_code == 200:

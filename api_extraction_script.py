@@ -49,11 +49,37 @@ query_structure = {
         }
 }
 
-
-data_frame = pd.DataFrame({})
+data = []
+filtered_data = {}
+flows = []
 
 answer = requests.post(url, data=json.dumps(query_structure), headers=headers)
-print(answer.content)
+
+for conversation in answer.json()['conversations']:
+    if conversation['originatingDirection'] == 'inbound':
+        for participant in conversation['participants']:
+            for session in participant['sessions']:
+                if 'flow' in session.keys():
+                    filtered_data[conversation['conversationId']] = {
+                        'flow' : session['flow']['flowId'],
+                        'participant' : participant['participantId'],
+                    }
+                    flows.append(session['flow'])
+        data.append(conversation)
+
+outcomes = []
+
+for flow in flows:
+    if 'outcomes' in flow.keys():
+        outcomes.append(flow.pop('outcomes'))
+
+outcomes_frame = pd.DataFrame.from_dict(outcomes)
+data_frame = pd.DataFrame.from_dict(filtered_data)
+flow_frame = pd.DataFrame.from_dict(flows)
+
+outcomes_frame.to_csv('outcomes.csv')
+data_frame.to_csv('out.csv')
+flow_frame.to_csv('flows.csv')
 
 """for header in answer['conversations'][0]:
     print(header)"""
